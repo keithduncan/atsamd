@@ -197,7 +197,8 @@ macro_rules! uart {
                         nvic.enable(Interrupt::$SERCOM);
 
                         sercom.usart().intenset.modify(|_, w| {
-                            w.rxc().set_bit()
+                            w.rxc().set_bit();
+                            w.error().set_bit()
                             //w.txc().set_bit()
                             //w.dre().set_bit()
                         });
