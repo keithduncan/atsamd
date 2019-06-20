@@ -239,9 +239,7 @@ macro_rules! uart {
                 }
 
                 pub fn clear_status(&mut self) {
-                    self.sercom.usart().status.write(|w| {
-                        unsafe { w.bits(0b00000000_00000000) }
-                    })
+                    self.sercom.usart().status.reset()
                 }
 
                 pub fn clear_frame_error(&mut self) {
