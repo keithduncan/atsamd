@@ -19,6 +19,16 @@ pub trait RxpoTxpo {
     fn rxpo_txpo(&self) -> (u8, u8);
 }
 
+#[derive(Debug)]
+pub struct Status {
+    pub parity_error: bool,
+    pub frame_error: bool,
+    pub buffer_overflow: bool,
+    pub clear_to_send: bool,
+    pub inconsistent_sync: bool,
+    pub collision: bool,
+}
+
 /// Define a UARTX type for the given Sercom.
 ///
 /// Also defines the valid "pad to uart function" mappings for this instance so
@@ -207,22 +217,60 @@ macro_rules! uart {
                     (self.padout, self.sercom)
                 }
 
+                pub fn has_error(&self) -> bool {
+                    self.sercom.usart().intflag.read().error().bit_is_set()
+                }
+
+                pub fn clear_error(&mut self) {
+                    self.sercom.usart().intflag.write(|w| {
+                        w.error().set_bit()
+                    })
+                }
+
+                pub fn status(&self) -> Status {
+                    let status = self.sercom.usart().status.read();
+
+                    Status {
+                        parity_error: status.perr().bit_is_set(),
+                        frame_error: status.ferr().bit_is_set(),
+                        buffer_overflow: status.bufovf().bit_is_set(),
+                        clear_to_send: status.cts().bit_is_set(),
+                        inconsistent_sync: status.isf().bit_is_set(),
+                        collision: status.coll().bit_is_set(),
+                    }
+                }
+
+                pub fn clear_status(&mut self) {
+                    self.sercom.usart().status.write(|w| {
+                        unsafe { w.bits(0b00000000) }
+                    })
+                }
+
+                pub fn clear_frame_error(&mut self) {
+                    self.sercom.usart().status.write(|w| {
+                        w.ferr().set_bit()
+                    });
+                }
+
+                pub fn has_data(&self) -> bool {
+                    self.usart().intflag.read().rxc().bit_is_set()
+                }
+
                 fn usart(&self) -> &USART {
                     return &self.sercom.usart();
                 }
 
-                fn dre(&self) -> bool {
+                fn data_register_empty(&self) -> bool {
                     self.usart().intflag.read().dre().bit_is_set()
                 }
             }
-
 
             impl<RX, TX, RTS, CTS> serial::Write<u8> for $Type<RX, TX, RTS, CTS> {
                 type Error = ();
 
                 fn write(&mut self, word: u8) -> nb::Result<(), Self::Error> {
                     unsafe {
-                        if !self.dre() {
+                        if !self.data_register_empty() {
                             return Err(nb::Error::WouldBlock);
                         }
 
@@ -236,7 +284,7 @@ macro_rules! uart {
 
                 fn flush(&mut self) -> nb::Result<(), Self::Error> {
                     // simply await DRE empty
-                    if !self.dre() {
+                    if !self.data_register_empty() {
                         return Err(nb::Error::WouldBlock);
                     }
 
@@ -248,8 +296,7 @@ macro_rules! uart {
                 type Error = ();
 
                 fn read(&mut self) -> nb::Result<u8, Self::Error> {
-                    let has_data = self.usart().intflag.read().rxc().bit_is_set();
-
+                    let has_data = self.has_data();
                     if !has_data {
                         return Err(nb::Error::WouldBlock);
                     }
