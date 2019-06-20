@@ -21,6 +21,16 @@ env:
   - CRATE=boards/pyportal
   - CRATE=boards/trellis_m4 FEATURES="--features=keypad-unproven"
   - CRATE=boards/pygamer
+  - CRATE=hal FEATURES="--features=samd21g18a"
+  - CRATE=hal FEATURES="--features=samd21e18a"
+  - CRATE=hal FEATURES="--features=samd51g19a"
+  - CRATE=hal FEATURES="--features=samd51j19a"
+  - CRATE=hal FEATURES="--features=samd51j20a"
+  - CRATE=pac/atsamd21g18a
+  - CRATE=pac/atsamd21e18a
+  - CRATE=pac/atsamd51g19a
+  - CRATE=pac/atsamd51j19a
+  - CRATE=pac/atsamd51j20a
 
 matrix:
   allow_failures:
