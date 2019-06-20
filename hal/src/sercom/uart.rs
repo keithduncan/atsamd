@@ -149,47 +149,44 @@ macro_rules! uart {
 
                         // Unsafe b/c of direct call to bits on rxpo/txpo
                         sercom.usart().ctrla.modify(|_, w| {
-                            w.dord().set_bit();
+                            w.dord().set_bit(); // LSB first
+
+                            w.cmode().clear_bit(); // Comm. mode, asynchronous
+
+                            w.form().bits(0x00); // USART frame, no parity
 
                             let (rxpo, txpo) = padout.rxpo_txpo();
                             w.rxpo().bits(rxpo);
                             w.txpo().bits(txpo);
 
-                            w.form().bits(0x00);
-                            w.sampr().bits(0x00); // 16x oversample fractional
+                            w.sampr().bits(0x01); // 16x oversample fractional
                             w.runstdby().set_bit(); // Run in standby
-                            w.form().bits(0); // 0 is no parity bits
 
                             w.mode().usart_int_clk() // Internal clock mode
                         });
 
-                        // Calculate value for BAUD register
-                        let sample_rate: u8 = 16;
+                        // Asynchronous fractional mode (Table 24-2 in datasheet)
+                        //   BAUD = fref / (sampleRateValue * fbaud)
+                        // (multiply by 8, to calculate fractional piece)
+                        let sample_rate: u32 = 16;
                         let fref = clock.freq().0;
 
-            //          TODO: Support fractional BAUD mode
-            //            let mul_ratio = (fref.0 * 1000) / (freq.into().0 * 16);
-            //
-            //            let baud = mul_ratio / 1000;
-            //            let fp = ((mul_ratio - (baud*1000))*8)/1000;
-            //
-            //            sercom.usart().baud()_frac_mode.modify(|_, w| {
-            //                w.baud().bits(baud as u16);
-            //                w.fp().bits(fp as u8)
-            //            });
-
-                        // Asynchronous arithmetic mode (Table 24-2 in datasheet)
-                        let baud = calculate_baud_value(freq.into().0, fref, sample_rate);
-
-                        sercom.usart().baud().modify(|_, w| {
-                            w.baud().bits(baud)
+                        let baud8x = (fref * 8) / (sample_rate * freq.into().0);
+            
+                        let fp = baud8x % 8;
+                        let baud = baud8x / 8;
+            
+                        sercom.usart().baud_frac_mode().write(|w| {
+                            w.fp().bits(fp as u8);
+                            w.baud().bits(baud as u16)
                         });
 
                         sercom.usart().ctrlb.modify(|_, w| {
-                            w.sbmode().clear_bit(); // 0 is one stop bit see sec 25.8.2
-                            w.chsize().bits(0x0);
+                            w.rxen().set_bit();
                             w.txen().set_bit();
-                            w.rxen().set_bit()
+
+                            w.sbmode().clear_bit(); // 0 is one stop bit see sec 25.8.2
+                            w.chsize().bits(0x0) // 8 data bits
                         });
 
                         while sercom.usart().syncbusy.read().ctrlb().bit_is_set() {}
@@ -327,14 +324,3 @@ uart!(UART3: (Sercom3, SERCOM3, sercom3_, Sercom3CoreClock));
 uart!(UART4: (Sercom4, SERCOM4, sercom4_, Sercom4CoreClock));
 #[cfg(feature = "samd21g18a")]
 uart!(UART5: (Sercom5, SERCOM5, sercom5_, Sercom5CoreClock));
-
-const SHIFT: u8 = 32;
-
-fn calculate_baud_value(baudrate: u32, clk_freq: u32, n_samples: u8) -> u16 {
-    let sample_rate = (n_samples as u64 * baudrate as u64) << 32;
-    let ratio = sample_rate / clk_freq as u64;
-    let scale = (1u64 << SHIFT) - ratio;
-    let baud_calculated = (65536u64 * scale) >> SHIFT;
-
-    return baud_calculated as u16;
-}
