@@ -1,6 +1,8 @@
 #![no_std]
 #![cfg_attr(feature = "usb", feature(align_offset, ptr_offset_from))]
 
+#![allow(deprecated)]
+
 #[cfg(feature = "samd21e18a")]
 pub use atsamd21e18a as target_device;
 
