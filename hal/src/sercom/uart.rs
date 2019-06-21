@@ -4,7 +4,7 @@ use crate::hal::blocking::serial::{write::Default, Write};
 use crate::hal::serial;
 use nb;
 use crate::sercom::pads::*;
-use crate::target_device::sercom0::USART;
+use crate::target_device::sercom0::{self, USART};
 use crate::target_device::Interrupt;
 use crate::target_device::{NVIC, PM, SERCOM0, SERCOM1, SERCOM2, SERCOM3};
 #[cfg(feature = "samd21g18a")]
@@ -17,16 +17,6 @@ use core::fmt;
 /// sense.
 pub trait RxpoTxpo {
     fn rxpo_txpo(&self) -> (u8, u8);
-}
-
-#[derive(Debug)]
-pub struct Status {
-    pub parity_error: bool,
-    pub frame_error: bool,
-    pub buffer_overflow: bool,
-    pub clear_to_send: bool,
-    pub inconsistent_sync: bool,
-    pub collision: bool,
 }
 
 /// Define a UARTX type for the given Sercom.
@@ -228,31 +218,22 @@ macro_rules! uart {
                     self.usart().intflag.read().error().bit_is_set()
                 }
 
-                pub fn has_data(&self) -> bool {
-                    self.usart().intflag.read().rxc().bit_is_set()
-                }
-
                 pub fn clear_error(&mut self) {
                     self.usart().intflag.modify(|_, w| {
                         w.error().set_bit()
                     })
                 }
 
-                pub fn status(&self) -> Status {
-                    let status = self.usart().status.read();
-
-                    Status {
-                        parity_error: status.perr().bit_is_set(),
-                        frame_error: status.ferr().bit_is_set(),
-                        buffer_overflow: status.bufovf().bit_is_set(),
-                        clear_to_send: status.cts().bit_is_set(),
-                        inconsistent_sync: status.isf().bit_is_set(),
-                        collision: status.coll().bit_is_set(),
-                    }
+                pub fn has_data(&self) -> bool {
+                    self.usart().intflag.read().rxc().bit_is_set()
                 }
 
-                pub fn clear_status(&mut self) {
-                    self.usart().status.reset()
+                fn data_register_empty(&self) -> bool {
+                    self.usart().intflag.read().dre().bit_is_set()
+                }
+
+                pub fn status(&self) -> sercom0::usart::status::R {
+                    self.usart().status.read()
                 }
 
                 pub fn clear_frame_error(&mut self) {
@@ -263,10 +244,6 @@ macro_rules! uart {
 
                 fn usart(&self) -> &USART {
                     return &self.sercom.usart();
-                }
-
-                fn data_register_empty(&self) -> bool {
-                    self.usart().intflag.read().dre().bit_is_set()
                 }
             }
 
