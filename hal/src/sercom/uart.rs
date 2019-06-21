@@ -165,21 +165,30 @@ macro_rules! uart {
                             w.mode().usart_int_clk() // Internal clock mode
                         });
 
+                        let sample_rate: u32 = 16;
+                        let fref = clock.freq().0;
+                        let baudrate = freq.into().0;
+
                         // Asynchronous fractional mode (Table 24-2 in datasheet)
                         //   BAUD = fref / (sampleRateValue * fbaud)
                         // (multiply by 8, to calculate fractional piece)
-                        let sample_rate: u32 = 16;
-                        let fref = clock.freq().0;
-
-                        let baud8x = (fref * 8) / (sample_rate * freq.into().0);
-            
-                        let fp = baud8x % 8;
-                        let baud = baud8x / 8;
-            
-                        sercom.usart().baud_frac_mode().write(|w| {
+                        let baud8x: u32 = (fref * 8) / (sample_rate * baudrate);
+                        let fp: u32 = baud8x % 8;
+                        let baud: u32 = baud8x / 8;
+                        sercom.usart().baud_frac_mode().modify(|_, w| {
                             w.fp().bits(fp as u8);
                             w.baud().bits(baud as u16)
                         });
+
+                        // Asynchronous arithmetic mode (Table 24-2 in datasheet)
+                        //   BAUD = 65,536 * (1 - (sampleRateValue * fbaud) / fref)
+                        // let sample_baud = (sample_rate as u64 * baudrate as u64) << 32;
+                        // let ratio = sample_baud / fref as u64;
+                        // let scale = (1u64 << 32) - ratio;
+                        // let baud_calculated = (65536u64 * scale) >> 32;
+                        // sercom.usart().baud().modify(|_, w| {
+                        //      w.baud().bits(baud)
+                        // });
 
                         sercom.usart().ctrlb.modify(|_, w| {
                             w.rxen().set_bit();
