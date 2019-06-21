@@ -216,17 +216,21 @@ macro_rules! uart {
                 }
 
                 pub fn has_error(&self) -> bool {
-                    self.sercom.usart().intflag.read().error().bit_is_set()
+                    self.usart().intflag.read().error().bit_is_set()
+                }
+
+                pub fn has_data(&self) -> bool {
+                    self.usart().intflag.read().rxc().bit_is_set()
                 }
 
                 pub fn clear_error(&mut self) {
-                    self.sercom.usart().intflag.write(|w| {
+                    self.usart().intflag.modify(|_, w| {
                         w.error().set_bit()
                     })
                 }
 
                 pub fn status(&self) -> Status {
-                    let status = self.sercom.usart().status.read();
+                    let status = self.usart().status.read();
 
                     Status {
                         parity_error: status.perr().bit_is_set(),
@@ -239,17 +243,13 @@ macro_rules! uart {
                 }
 
                 pub fn clear_status(&mut self) {
-                    self.sercom.usart().status.reset()
+                    self.usart().status.reset()
                 }
 
                 pub fn clear_frame_error(&mut self) {
-                    self.sercom.usart().status.write(|w| {
+                    self.usart().status.modify(|_, w| {
                         w.ferr().set_bit()
                     });
-                }
-
-                pub fn has_data(&self) -> bool {
-                    self.usart().intflag.read().rxc().bit_is_set()
                 }
 
                 fn usart(&self) -> &USART {
@@ -270,7 +270,7 @@ macro_rules! uart {
                             return Err(nb::Error::WouldBlock);
                         }
 
-                        self.sercom.usart().data.write(|w| {
+                        self.usart().data.write(|w| {
                             w.bits(word as u16)
                         });
                     }
