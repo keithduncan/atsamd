@@ -31,6 +31,22 @@ fn cal_with_errata(
     }
 }
 
+/// Returns the adc bias calibration value from the NVM calibration area.
+pub fn adc_bias_cal() -> u8 /* u3 */ {
+    cal(4, 3, 0b111) as u8
+}
+
+/// Returns the adc linearity calibration value from the NVM calibration area.
+pub fn adc_linearity_cal() -> u8 {
+    // 4:0
+    let lower = cal(0, 27, 0b1_1111) as u8;
+
+    // 7:5
+    let upper = cal(4, 0, 0b111) as u8;
+
+    (upper << 5) | lower
+}
+
 /// Returns the osc32k calibration value from the NVM calibration area
 pub fn osc32k_cal() -> u8 {
     cal(4, 6, 0x7f) as u8
