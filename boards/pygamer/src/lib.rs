@@ -11,14 +11,12 @@ pub use crate::pins::Pins;
 pub use hal::target_device::*;
 pub use hal::*;
 
-use hal::prelude::*;
-use gpio::{Floating, Input, Port};
+use gpio::{Floating, Input, PfC, Port};
 use hal::clock::GenericClockController;
-use hal::sercom::{I2CMaster2, PadPin, SPIMaster1, SPIMaster4};
-use hal::time::Hertz;
-use hal::timer::TimerCounter;
+use hal::prelude::*;
 use hal::pwm::Pwm2;
-use cortex_m::peripheral::SYST;
+use hal::sercom::{I2CMaster2, PadPin, SPIMaster1, SPIMaster4, UART5};
+use hal::time::Hertz;
 
 use st7735_lcd::{Orientation, ST7735};
 
@@ -41,7 +39,11 @@ pub fn spi_master<F: Into<Hertz>>(
     mosi: gpio::Pb23<Input<Floating>>,
     sck: gpio::Pa17<Input<Floating>>,
     port: &mut Port,
-) -> SPIMaster1<hal::sercom::Sercom1Pad2<gpio::Pb22<gpio::PfC>>, hal::sercom::Sercom1Pad3<gpio::Pb23<gpio::PfC>>, hal::sercom::Sercom1Pad1<gpio::Pa17<gpio::PfC>>> {
+) -> SPIMaster1<
+    hal::sercom::Sercom1Pad2<gpio::Pb22<gpio::PfC>>,
+    hal::sercom::Sercom1Pad3<gpio::Pb23<gpio::PfC>>,
+    hal::sercom::Sercom1Pad1<gpio::Pa17<gpio::PfC>>,
+> {
     let gclk0 = clocks.gclk0();
     SPIMaster1::new(
         &clocks.sercom1_core(&gclk0).unwrap(),
@@ -52,17 +54,13 @@ pub fn spi_master<F: Into<Hertz>>(
         },
         sercom1,
         mclk,
-        (
-            miso.into_pad(port),
-            mosi.into_pad(port),
-            sck.into_pad(port),
-        ),
+        (miso.into_pad(port), mosi.into_pad(port), sck.into_pad(port)),
     )
 }
 
 /// Convenience for accessing the on-board TFT LCD.
 pub fn display(
-    mut clocks: &mut GenericClockController,
+    clocks: &mut GenericClockController,
     sercom4: SERCOM4,
     mclk: &mut MCLK,
     accel_irq: gpio::Pb14<Input<Floating>>, // TODO remove once we make miso optional
@@ -73,20 +71,23 @@ pub fn display(
     tft_dc: gpio::Pb5<Input<Floating>>,
     tft_backlight: gpio::Pa1<Input<Floating>>,
     timer2: TC2,
-    syst: SYST,
+    delay: &mut hal::delay::Delay,
     port: &mut Port,
-) -> Result<(
+) -> Result<
+    (
         ST7735<
             SPIMaster4<
                 hal::sercom::Sercom4Pad2<hal::gpio::Pb14<hal::gpio::PfC>>,
                 hal::sercom::Sercom4Pad3<hal::gpio::Pb15<hal::gpio::PfC>>,
-                hal::sercom::Sercom4Pad1<hal::gpio::Pb13<hal::gpio::PfC>>
+                hal::sercom::Sercom4Pad1<hal::gpio::Pb13<hal::gpio::PfC>>,
             >,
             gpio::Pb5<gpio::Output<gpio::PushPull>>,
-            gpio::Pa0<gpio::Output<gpio::PushPull>>
+            gpio::Pa0<gpio::Output<gpio::PushPull>>,
         >,
-        Pwm2
-    ), ()> {
+        Pwm2,
+    ),
+    (),
+> {
     let gclk0 = clocks.gclk0();
     let tft_spi = SPIMaster4::new(
         &clocks.sercom4_core(&gclk0).ok_or(())?,
@@ -112,8 +113,7 @@ pub fn display(
     let gclk0 = clocks.gclk0();
 
     let mut display = st7735_lcd::ST7735::new(tft_spi, tft_dc, tft_reset, true, false);
-    let mut delay = hal::delay::Delay::new(syst, &mut clocks);
-    display.init(&mut delay)?;
+    display.init(delay)?;
     display.set_orientation(&Orientation::LandscapeSwapped)?;
 
     let tft_backlight = tft_backlight.into_function_e(port);
@@ -140,7 +140,10 @@ pub fn i2c_master<F: Into<Hertz>>(
     sda: gpio::Pa12<Input<Floating>>,
     scl: gpio::Pa13<Input<Floating>>,
     port: &mut Port,
-) -> I2CMaster2<hal::sercom::Sercom2Pad0<gpio::Pa12<gpio::PfC>>, hal::sercom::Sercom2Pad1<gpio::Pa13<gpio::PfC>>> {
+) -> I2CMaster2<
+    hal::sercom::Sercom2Pad0<gpio::Pa12<gpio::PfC>>,
+    hal::sercom::Sercom2Pad1<gpio::Pa13<gpio::PfC>>,
+> {
     let gclk0 = clocks.gclk0();
     I2CMaster2::new(
         &clocks.sercom2_core(&gclk0).unwrap(),
@@ -149,5 +152,34 @@ pub fn i2c_master<F: Into<Hertz>>(
         mclk,
         sda.into_pad(port),
         scl.into_pad(port),
+    )
+}
+
+/// Convenience for setting up UART on the FeatherWing socket’s
+/// RX/TX pins
+pub fn uart<F: Into<Hertz>>(
+    clocks: &mut GenericClockController,
+    baud: F,
+    sercom5: SERCOM5,
+    mclk: &mut MCLK,
+    nvic: &mut NVIC,
+    rx: gpio::Pb17<Input<Floating>>,
+    tx: gpio::Pb16<Input<Floating>>,
+    port: &mut Port,
+) -> UART5<
+    hal::sercom::Sercom5Pad1<gpio::Pb17<PfC>>,
+    hal::sercom::Sercom5Pad0<gpio::Pb16<PfC>>,
+    (),
+    (),
+> {
+    let gclk0 = clocks.gclk0();
+
+    UART5::new(
+        &clocks.sercom5_core(&gclk0).unwrap(),
+        baud.into(),
+        sercom5,
+        nvic,
+        mclk,
+        (rx.into_pad(port), tx.into_pad(port)),
     )
 }
