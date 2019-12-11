@@ -8,10 +8,13 @@ use panic_halt;
 use trellis_m4 as hal;
 use ws2812_nop_samd51 as ws2812;
 
+use embedded_hal::digital::v1_compat::{OldOutputPin};
+
 use hal::adxl343::accelerometer::Orientation;
 use hal::prelude::*;
 use hal::{clock::GenericClockController, delay::Delay};
-use hal::{entry, CorePeripherals, Peripherals};
+use hal::entry;
+use hal::pac::{CorePeripherals, Peripherals};
 use smart_leds::{colors, Color, SmartLedsWrite};
 
 #[entry]
@@ -31,7 +34,7 @@ fn main() -> ! {
     let mut pins = hal::Pins::new(peripherals.PORT).split();
 
     // neopixels
-    let neopixel_pin = pins.neopixel.into_push_pull_output(&mut pins.port);
+    let neopixel_pin: OldOutputPin<_> = pins.neopixel.into_push_pull_output(&mut pins.port).into();
     let mut neopixels = ws2812::Ws2812::new(neopixel_pin);
 
     // accelerometer

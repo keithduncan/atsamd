@@ -8,7 +8,7 @@ extern crate cortex_m_rt;
 extern crate nb;
 
 use crate::hal::clock::GenericClockController;
-use crate::hal::Peripherals;
+use crate::hal::pac::Peripherals;
 use crate::hal::timer::TimerCounter;
 use hal::prelude::*;
 use cortex_m_rt::entry;
@@ -32,9 +32,9 @@ fn main() -> ! {
     timer.start(9600u32.hz());
     let mut d0 = pins.d0.into_push_pull_output(&mut pins.port);
     loop {
-        d0.set_high();
+        d0.set_high().unwrap();
         block!(timer.wait()).ok();
-        d0.set_low();
+        d0.set_low().unwrap();
         block!(timer.wait()).ok();
     }
 }

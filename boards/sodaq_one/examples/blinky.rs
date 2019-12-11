@@ -15,7 +15,8 @@ use cortex_m_semihosting::hprintln;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::prelude::*;
-use hal::{entry, CorePeripherals, Peripherals};
+use hal::entry;
+use hal::pac::{CorePeripherals, Peripherals};
 
 #[entry]
 fn main() -> ! {
@@ -38,17 +39,17 @@ fn main() -> ! {
     loop {
         #[cfg(feature = "use_semihosting")]
         hprintln!("loop").unwrap();
-        red_led.set_low();
-        green_led.set_high();
-        blue_led.set_high();
+        red_led.set_low().unwrap();
+        green_led.set_high().unwrap();
+        blue_led.set_high().unwrap();
         delay.delay_ms(time);
-        red_led.set_high();
-        green_led.set_low();
-        blue_led.set_high();
+        red_led.set_high().unwrap();
+        green_led.set_low().unwrap();
+        blue_led.set_high().unwrap();
         delay.delay_ms(time);
-        red_led.set_high();
-        green_led.set_high();
-        blue_led.set_low();
+        red_led.set_high().unwrap();
+        green_led.set_high().unwrap();
+        blue_led.set_low().unwrap();
         delay.delay_ms(time);
     }
 }

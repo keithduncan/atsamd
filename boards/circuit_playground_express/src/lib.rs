@@ -3,8 +3,11 @@
 extern crate atsamd_hal as hal;
 
 use hal::prelude::*;
-pub use hal::target_device::*;
-pub use hal::*;
+use hal::*;
+
+pub use hal::target_device as pac;
+pub use hal::common::*;
+pub use hal::samd21::*;
 
 use gpio::{Floating, Input, Output, Port, PushPull};
 use hal::clock::GenericClockController;
@@ -56,6 +59,9 @@ define_pins!(
     pin flash_miso = a16,
     /// The CS pin attached to the on-board SPI flash
     pin flash_cs = b22,
+
+    pin accel_sda = a0,
+    pin accel_scl = a1,
 );
 
 /// Convenience for accessing the on-board SPI Flash device.
@@ -63,8 +69,8 @@ define_pins!(
 /// SPI Master.
 pub fn flash_spi_master(
     clocks: &mut GenericClockController,
-    sercom3: SERCOM3,
-    pm: &mut PM,
+    sercom3: pac::SERCOM3,
+    pm: &mut pac::PM,
     sck: gpio::Pa21<Input<Floating>>,
     mosi: gpio::Pa20<Input<Floating>>,
     miso: gpio::Pa16<Input<Floating>>,
@@ -89,7 +95,10 @@ pub fn flash_spi_master(
     );
 
     let mut cs = cs.into_push_pull_output(port);
-    cs.set_high();
+
+    // We’re confident that set_high won’t error here because on-board
+    // GPIO pins don’t error.
+    cs.set_high().unwrap();
 
     (flash, cs)
 }
@@ -99,8 +108,8 @@ pub fn flash_spi_master(
 pub fn i2c_master<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     bus_speed: F,
-    sercom5: SERCOM5,
-    pm: &mut PM,
+    sercom5: pac::SERCOM5,
+    pm: &mut pac::PM,
     sda: gpio::Pb2<Input<Floating>>,
     scl: gpio::Pb3<Input<Floating>>,
     port: &mut Port,

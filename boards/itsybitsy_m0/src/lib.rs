@@ -8,8 +8,11 @@ extern crate cortex_m_rt;
 pub use cortex_m_rt::entry;
 
 use hal::prelude::*;
-pub use hal::target_device::*;
-pub use hal::*;
+use hal::*;
+
+pub use hal::target_device as pac;
+pub use hal::common::*;
+pub use hal::samd21::*;
 
 use gpio::{Floating, Input, Port, PfC};
 use hal::clock::GenericClockController;
@@ -99,8 +102,8 @@ define_pins!(
 pub fn spi_master<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     bus_speed: F,
-    sercom4: SERCOM4,
-    pm: &mut PM,
+    sercom4: pac::SERCOM4,
+    pm: &mut pac::PM,
     sck: gpio::Pb11<Input<Floating>>,
     mosi: gpio::Pb10<Input<Floating>>,
     miso: gpio::Pa12<Input<Floating>>,
@@ -129,8 +132,8 @@ pub fn spi_master<F: Into<Hertz>>(
 /// SPI Master.
 pub fn flash_spi_master(
     clocks: &mut GenericClockController,
-    sercom5: SERCOM5,
-    pm: &mut PM,
+    sercom5: pac::SERCOM5,
+    pm: &mut pac::PM,
     sck: gpio::Pb23<Input<Floating>>,
     mosi: gpio::Pb22<Input<Floating>>,
     miso: gpio::Pb3<Input<Floating>>,
@@ -157,7 +160,10 @@ pub fn flash_spi_master(
     );
 
     let mut cs = cs.into_push_pull_output(port);
-    cs.set_high();
+
+    // We’re confident that set_high won’t error here because on-board
+    // GPIO pins don’t error.
+    cs.set_high().unwrap();
 
     (flash, cs)
 }
@@ -167,8 +173,8 @@ pub fn flash_spi_master(
 pub fn i2c_master<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     bus_speed: F,
-    sercom3: SERCOM3,
-    pm: &mut PM,
+    sercom3: pac::SERCOM3,
+    pm: &mut pac::PM,
     sda: gpio::Pa22<Input<Floating>>,
     scl: gpio::Pa23<Input<Floating>>,
     port: &mut Port,
@@ -192,9 +198,8 @@ pub fn i2c_master<F: Into<Hertz>>(
 pub fn uart<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     baud: F,
-    sercom0: SERCOM0,
-    nvic: &mut NVIC,
-    pm: &mut PM,
+    sercom0: pac::SERCOM0,
+    pm: &mut pac::PM,
     d0: gpio::Pa11<Input<Floating>>,
     d1: gpio::Pa10<Input<Floating>>,
     port: &mut Port,
@@ -210,7 +215,6 @@ pub fn uart<F: Into<Hertz>>(
         &clocks.sercom0_core(&gclk0).unwrap(),
         baud.into(),
         sercom0,
-        nvic,
         pm,
         (d0.into_pad(port), d1.into_pad(port)),
     )
@@ -218,9 +222,9 @@ pub fn uart<F: Into<Hertz>>(
 
 #[cfg(feature = "usb")]
 pub fn usb_bus(
-    usb: USB,
+    usb: pac::USB,
     clocks: &mut GenericClockController,
-    pm: &mut PM,
+    pm: &mut pac::PM,
     dm: gpio::Pa24<Input<Floating>>,
     dp: gpio::Pa25<Input<Floating>>,
     port: &mut Port,

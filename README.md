@@ -1,50 +1,57 @@
 # atsamd support for Rust
 
-This repo holds various things that support/enable working with atmel samd21 and samd51 based
+This repo holds various things that support/enable working with atmel samd11, samd21 and samd51 based
 devices, such as the Adafruit Metro M0, Trinket M0 and Gemma M0, using Rust.
 
 [![Build Status](https://travis-ci.org/atsamd-rs/atsamd.svg?branch=master)](https://travis-ci.org/atsamd-rs/atsamd)
 
 There are a couple of crates provided by this repo:
 
-* [`atsamd21g18a`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/atsamd21g18a/) is an
+* [`atsamd11c14a`](https://docs.rs/atsamd11c14a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file.
+* [`atsamd21g18a`](https://docs.rs/atsamd21g18a/) is an
   auto-generated crate providing access to the peripherals
   specified for this device by its SVD file.  This is the MCU used in the Metro M0,
   Feather M0, Circuit Playground express boards from Adafruit, the Sparkfun SAMD21 Mini, the Arduino MKR ZERO and the SODAQ ONE board
   from SODAQ.
-* [`atsamd21e18a`](https://atsamd-rs.github.io/atsamd/atsamd21e18a/atsamd21e18a/) is an
+* [`atsamd21e18a`](https://docs.rs/atsamd21e18a/) is an
   auto-generated crate providing access to the peripherals
   specified for this device by its SVD file.  This is the MCU used in the Trinket M0
   and Gemma M0 boards from Adafruit.
-* [`atsamd51j19a`](https://atsamd-rs.github.io/atsamd/atsamd51j19a/atsamd51j19a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file. This is the MCU used in the Metro M4 and Feather M4 boards from Adafruit.
-* [`atsamd51j20a`](https://atsamd-rs.github.io/atsamd/atsamd51j20a/atsamd51j20a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file. This is the MCU used in the PyPortal board from Adafruit.
-* [`atsamd51g19a`](https://atsamd-rs.github.io/atsamd/atsamd51g19a/atsamd51g19a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file. This is the MCU used in the Trellis M4 and ItsyBitsy M4 boards from Adafruit.
-* [`atsamd-hal`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/atsamd_hal/) is the result
+* [`atsamd21j18a`](https://docs.rs/atsamd21j18a/) is an
+  auto-generated crate providing access to the peripherals
+  specified for this device by its SVD file.  This is the MCU used in the SARA AFF
+  boards from Sodaq.
+* [`atsamd51j19a`](https://docs.rs/atsamd51j19a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file. This is the MCU used in the Metro M4 and Feather M4 boards from Adafruit.
+* [`atsamd51j20a`](https://docs.rs/atsamd51j20a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file. This is the MCU used in the PyPortal board from Adafruit.
+* [`atsamd51g19a`](https://docs.rs/atsamd51g19a/) is an auto-generated crate providing access to the peripherals specified for this device by its SVD file. This is the MCU used in the Trellis M4 and ItsyBitsy M4 boards from Adafruit.
+* [`atsamd-hal`](https://docs.rs/atsamd_hal/) is the result
   of reading the datasheet for the device and encoding
-  a type-safe layer over the raw `atsamd21g18a`, `atsamd21e18a`, `atsamd51j19a`, and `atsamd51g19a` crates.  This crate
+  a type-safe layer over the raw `atsamd11c14a`, `atsamd21g18a`, `atsamd21e18a`, `atsamd21j18a`, `atsamd51j19a`, and `atsamd51g19a` crates.  This crate
   implements traits specified by the `embedded-hal` project, making it compatible with
   various drivers in the embedded rust ecosystem.
 
 In addition to the generic crates, there are also crates for popular ATSAMD21/51 based development boards. They aim to rename pins to match silk screens or Arduino pin assignments, add helpers for initialization, and re-export the `atsamd-hal` crate.
 
-* [`arduino_mkrzero`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/arduino_mkrzero/)
-* [`circuit_playground_express`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/circuit_playground_express/)
-* [`feather_m0`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/feather_m0/)
-* [`gemma_m0`](https://atsamd-rs.github.io/atsamd/atsamd21e18a/gemma_m0/)
-* [`itsybitsy_m0`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/itsybitsy_m0/)
-* [`metro_m0`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/metro_m0/)
-* [`samd21_mini`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/samd21_mini/)
-* [`trinket_m0`](https://atsamd-rs.github.io/atsamd/atsamd21e18a/trinket_m0/)
-* [`sodaq_one`](https://atsamd-rs.github.io/atsamd/atsamd21g18a/sodaq_one/)
-* [`metro_m4`](https://atsamd-rs.github.io/atsamd/atsamd51j19a/metro_m4/)
-* [`trellis_m4`](https://atsamd-rs.github.io/atsamd/atsamd51g19a/trellis_m4/)
-* [`feather_m4`](https://atsamd-rs.github.io/atsamd/atsamd51j19a/feather_m4/)
-* [`pyportal`](https://atsamd-rs.github.io/atsamd/atsamd51j20a/pyportal/)
+* [`arduino_mkrzero`](https://docs.rs/arduino_mkrzero/)
+* [`circuit_playground_express`](https://docs.rs/circuit_playground_express/)
+* [`feather_m0`](https://docs.rs/feather_m0/)
+* [`gemma_m0`](https://docs.rs/gemma_m0/)
+* [`itsybitsy_m0`](https://docs.rs/itsybitsy_m0/)
+* [`metro_m0`](https://docs.rs/metro_m0/)
+* [`samd21_mini`](https://docs.rs/samd21_mini/)
+* [`trinket_m0`](https://docs.rs/trinket_m0/)
+* [`sodaq_one`](https://docs.rs/sodaq_one/)
+* [`metro_m4`](https://docs.rs/metro_m4/)
+* [`trellis_m4`](https://docs.rs/trellis_m4/)
+* [`feather_m4`](https://docs.rs/feather_m4/)
+* [`pyportal`](https://docs.rs/pyportal/)
+* [`pygamer`](https://docs.rs/pygamer/)
+* [`sodaq_sara_aff`](https://docs.rs/sodaq_sara_aff/)
 
 ## Building
 
  You'll need to install support for
-`thumbv6m-none-eabi` if you're targeting samd21 or `thumbv7em-none-eabihf` if you're targeting samd51.  Make sure that you have a new enough version of the
+`thumbv6m-none-eabi` if you're targeting samd11 or samd21, or `thumbv7em-none-eabihf` if you're targeting samd51.  Make sure that you have a new enough version of the
 gcc toolchain; the one installable even on recent versions of ubuntu can
 fail to correctly link the vector table:
 
@@ -133,6 +140,8 @@ $ cargo build --manifest-path metro_m0/Cargo.toml \
   --example blinky_basic --features use_semihosting
 ```
 
+## Adding a new board
+See our wiki page for a [complete guide](https://github.com/atsamd-rs/atsamd/wiki/Adding-a-new-board) on adding a new board.
 
 ## License
 
