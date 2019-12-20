@@ -75,6 +75,7 @@ where
         count.cc[0].write(|w| unsafe { w.cc().bits(cycles as u16) });
 
         count.ctrla.modify(|_, w| {
+            w.runstdby().set_bit();
             match divider {
                 1 => w.prescaler().div1(),
                 2 => w.prescaler().div2(),
