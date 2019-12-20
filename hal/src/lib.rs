@@ -1,13 +1,13 @@
 #![no_std]
 
+#![allow(deprecated)]
+
 pub extern crate embedded_hal as hal;
 
 pub use paste;
 
 #[cfg(feature = "samd11c14a")]
 pub use atsamd11c14a as target_device;
-
-#![allow(deprecated)]
 
 #[cfg(feature = "samd21e18a")]
 pub use atsamd21e18a as target_device;
