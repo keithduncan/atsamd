@@ -11,7 +11,8 @@ use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::prelude::*;
 use hal::time::MegaHertz;
-use hal::{entry, CorePeripherals, Peripherals};
+use hal::entry;
+use hal::pac::{CorePeripherals, Peripherals};
 
 use embedded_graphics::prelude::*;
 use embedded_graphics::primitives::{Circle, Line, Rect};
@@ -48,7 +49,7 @@ fn main() -> ! {
 
     let mut disp: GraphicsMode<_> = Builder::new().connect_spi(spi, dc).into();
 
-    disp.reset(&mut rst, &mut delay);
+    disp.reset(&mut rst, &mut delay).unwrap();
     disp.init().unwrap();
     disp.flush().unwrap();
 
@@ -84,8 +85,8 @@ fn main() -> ! {
 
     loop {
         delay.delay_ms(200u8);
-        red_led.set_high();
+        red_led.set_high().unwrap();
         delay.delay_ms(200u8);
-        red_led.set_low();
+        red_led.set_low().unwrap();
     }
 }

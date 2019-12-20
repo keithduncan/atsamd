@@ -1,13 +1,22 @@
 #![no_std]
-#![cfg_attr(feature = "usb", feature(align_offset, ptr_offset_from))]
 
 #![allow(deprecated)]
+
+pub extern crate embedded_hal as hal;
+
+pub use paste;
+
+#[cfg(feature = "samd11c14a")]
+pub use atsamd11c14a as target_device;
 
 #[cfg(feature = "samd21e18a")]
 pub use atsamd21e18a as target_device;
 
 #[cfg(feature = "samd21g18a")]
 pub use atsamd21g18a as target_device;
+
+#[cfg(feature = "samd21j18a")]
+pub use atsamd21j18a as target_device;
 
 #[cfg(feature = "samd51g19a")]
 pub use atsamd51g19a as target_device;
@@ -33,53 +42,32 @@ macro_rules! dbgprint {
     };
 }
 
-#[cfg(not(feature = "use_rtt"))]
+#[cfg(all(not(feature = "use_rtt"), not(feature = "use_uart_debug")))]
 #[macro_export]
 macro_rules! dbgprint {
     ($($arg:tt)*) => {{}};
 }
 
-pub extern crate embedded_hal as hal;
-pub use paste;
-
-#[cfg(not(feature="samd51"))]
-pub mod calibration;
-
-#[cfg(not(feature = "samd51"))]
-pub mod clock;
-
-#[cfg(feature = "samd51")]
-#[path = "clock51.rs"]
-pub mod clock;
-
 #[macro_use]
-mod pad;
-
-#[cfg(not(feature = "samd51"))]
-pub mod sercom;
+pub mod common;
+pub use self::common::*;
 
 #[cfg(feature = "samd51")]
-#[path = "sercom51/mod.rs"]
-pub mod sercom;
-
+pub mod samd51;
 #[cfg(feature = "samd51")]
-#[path = "timer51.rs"]
-pub mod timer;
+pub use self::samd51::*;
 
-#[cfg(not(feature = "samd51"))]
-pub mod timer;
+#[cfg(not(any(feature = "samd11c14a", feature = "samd51")))]
+pub mod samd21;
+#[cfg(not(any(feature = "samd11c14a", feature = "samd51")))]
+pub use self::samd21::*;
 
-#[cfg(feature="samd51")]
-#[path = "pwm51.rs"]
-pub mod pwm;
+#[cfg(feature = "samd11c14a")]
+pub mod samd11;
+#[cfg(feature = "samd11c14a")]
+pub use self::samd11::*;
 
-#[cfg(not(feature="samd51"))]
-pub mod pwm;
-
-pub mod delay;
-pub mod gpio;
-pub mod prelude;
-pub mod time;
-
-#[cfg(feature = "usb")]
-pub mod usb;
+#[cfg(all(feature = "usb", feature = "samd21"))]
+pub use self::samd21::usb;
+#[cfg(all(feature = "usb", feature = "samd51"))]
+pub use self::samd51::usb;

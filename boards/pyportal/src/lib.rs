@@ -7,9 +7,12 @@ use atsamd_hal as hal;
 #[cfg(feature = "rt")]
 pub use cortex_m_rt::entry;
 
+use hal::*;
+
 pub use crate::pins::Pins;
-pub use hal::target_device::*;
-pub use hal::*;
+pub use hal::target_device as pac;
+pub use hal::common::*;
+pub use hal::samd51::*;
 
 use gpio::{Floating, Input, Port, PfC};
 use hal::clock::GenericClockController;
@@ -30,8 +33,8 @@ use usb_device::bus::UsbBusWrapper;
 pub fn spi_master<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     bus_speed: F,
-    sercom2: SERCOM2,
-    mclk: &mut MCLK,
+    sercom2: pac::SERCOM2,
+    mclk: &mut pac::MCLK,
     sck: gpio::Pa13<Input<Floating>>,
     mosi: gpio::Pa12<Input<Floating>>,
     miso: gpio::Pa14<Input<Floating>>,
@@ -60,8 +63,8 @@ pub fn spi_master<F: Into<Hertz>>(
 pub fn i2c_master<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     bus_speed: F,
-    sercom5: SERCOM5,
-    mclk: &mut MCLK,
+    sercom5: pac::SERCOM5,
+    mclk: &mut pac::MCLK,
     sda: gpio::Pb2<Input<Floating>>,
     scl: gpio::Pb3<Input<Floating>>,
     port: &mut Port,
@@ -84,9 +87,8 @@ pub fn i2c_master<F: Into<Hertz>>(
 pub fn esp_uart<F: Into<Hertz>>(
     clocks: &mut GenericClockController,
     baud: F,
-    sercom4: SERCOM4,
-    mclk: &mut MCLK,
-    nvic: &mut NVIC,
+    sercom4: pac::SERCOM4,
+    mclk: &mut pac::MCLK,
     esp_rx: gpio::Pb13<Input<Floating>>,
     esp_tx: gpio::Pb12<Input<Floating>>,
     port: &mut Port,
@@ -100,7 +102,6 @@ pub fn esp_uart<F: Into<Hertz>>(
         &clocks.sercom4_core(&gclk0).unwrap(),
         baud.into(),
         sercom4,
-        nvic,
         mclk,
         (esp_rx.into_pad(port), esp_tx.into_pad(port)),
     )
