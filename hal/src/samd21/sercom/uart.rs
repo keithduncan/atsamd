@@ -5,8 +5,6 @@ use crate::hal::serial;
 use nb;
 use crate::sercom::pads::*;
 use crate::target_device::sercom0::{self, USART};
-use crate::target_device::Interrupt;
-use crate::target_device::{NVIC, PM, SERCOM0, SERCOM1, SERCOM2, SERCOM3};
 use crate::target_device::{PM, SERCOM0, SERCOM1, SERCOM2, SERCOM3};
 #[cfg(any(feature = "samd21g18a", feature="samd21j18a"))]
 use crate::target_device::{SERCOM4, SERCOM5};
@@ -189,8 +187,6 @@ macro_rules! uart {
                         });
 
                         while sercom.usart().syncbusy.read().ctrlb().bit_is_set() {}
-
-                        nvic.enable(Interrupt::$SERCOM);
 
                         sercom.usart().intenset.modify(|_, w| {
                             w.rxc().set_bit();
