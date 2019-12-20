@@ -123,6 +123,10 @@ where
     pub fn disable_interrupt(&mut self) {
         self.tc.count_16().intenclr.write(|w| w.ovf().set_bit());
     }
+
+    pub fn clear_interrupt(&mut self) {
+        self.tc.count_16().intflag.write(|w| w.ovf().set_bit());
+    }
 }
 
 macro_rules! tc {
