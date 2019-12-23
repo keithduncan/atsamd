@@ -704,12 +704,11 @@ impl Inner {
         usb.ctrla.modify(|_, w| w.enable().set_bit());
 
         usb.intenset.write(|w| {
-            w.eorst().set_bit();
-            w.lpmsusp().set_bit();
-            w.suspend().set_bit();
-            w.wakeup().set_bit();
             w.eorsm().set_bit();
-            w.uprsm().set_bit()
+            w.wakeup().set_bit();
+            w.eorst().set_bit();
+            w.sof().set_bit();
+            w.suspend().set_bit()
         });
 
         self.flush_eps();
@@ -813,6 +812,15 @@ impl Inner {
     }
 
     fn poll(&self) -> PollResult {
+        //cortex_m::asm::bkpt();
+        //let status = self.usb().intflag.read();
+
+        self.usb().intflag.write(|w| {
+            w.wakeup().set_bit()
+            .sof().set_bit()
+            .eorsm().set_bit()
+        });
+
         if self.received_suspend_interrupt() {
             self.clear_suspend();
             dbgprint!("PollResult::Suspend");
