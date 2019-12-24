@@ -461,7 +461,18 @@ impl<'a> Bank<'a, OutBank> {
 }
 
 impl<'a, T> Bank<'a, T> {
-    ep!(epcfg, EPCFG, epcfg0, epcfg1, epcfg2, epcfg3, epcfg4, epcfg5, epcfg6, epcfg7);
+    ep!(
+        epcfg,
+        EPCFG,
+        epcfg0,
+        epcfg1,
+        epcfg2,
+        epcfg3,
+        epcfg4,
+        epcfg5,
+        epcfg6,
+        epcfg7
+    );
     ep!(
         epstatusclr,
         EPSTATUSCLR,
@@ -487,12 +498,28 @@ impl<'a, T> Bank<'a, T> {
         epstatusset7
     );
     ep!(
-        epstatus, EPSTATUS, epstatus0, epstatus1, epstatus2, epstatus3, epstatus4, epstatus5,
-        epstatus6, epstatus7
+        epstatus,
+        EPSTATUS,
+        epstatus0,
+        epstatus1,
+        epstatus2,
+        epstatus3,
+        epstatus4,
+        epstatus5,
+        epstatus6,
+        epstatus7
     );
     ep!(
-        epintflag, EPINTFLAG, epintflag0, epintflag1, epintflag2, epintflag3, epintflag4,
-        epintflag5, epintflag6, epintflag7
+        epintflag,
+        EPINTFLAG,
+        epintflag0,
+        epintflag1,
+        epintflag2,
+        epintflag3,
+        epintflag4,
+        epintflag5,
+        epintflag6,
+        epintflag7
     );
     ep!(
         epintenclr,
@@ -521,14 +548,41 @@ impl<'a, T> Bank<'a, T> {
 }
 
 impl Inner {
-    ep!(epcfg, EPCFG, epcfg0, epcfg1, epcfg2, epcfg3, epcfg4, epcfg5, epcfg6, epcfg7);
     ep!(
-        epstatus, EPSTATUS, epstatus0, epstatus1, epstatus2, epstatus3, epstatus4, epstatus5,
-        epstatus6, epstatus7
+        epcfg,
+        EPCFG,
+        epcfg0,
+        epcfg1,
+        epcfg2,
+        epcfg3,
+        epcfg4,
+        epcfg5,
+        epcfg6,
+        epcfg7
     );
     ep!(
-        epintflag, EPINTFLAG, epintflag0, epintflag1, epintflag2, epintflag3, epintflag4,
-        epintflag5, epintflag6, epintflag7
+        epstatus,
+        EPSTATUS,
+        epstatus0,
+        epstatus1,
+        epstatus2,
+        epstatus3,
+        epstatus4,
+        epstatus5,
+        epstatus6,
+        epstatus7
+    );
+    ep!(
+        epintflag,
+        EPINTFLAG,
+        epintflag0,
+        epintflag1,
+        epintflag2,
+        epintflag3,
+        epintflag4,
+        epintflag5,
+        epintflag6,
+        epintflag7
     );
 
     fn bank0<'a>(&'a self, ep: EndpointAddress) -> UsbResult<Bank<'a, OutBank>> {
