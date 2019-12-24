@@ -707,7 +707,6 @@ impl Inner {
             w.eorsm().set_bit();
             w.wakeup().set_bit();
             w.eorst().set_bit();
-            w.sof().set_bit();
             w.suspend().set_bit()
         });
 
@@ -812,13 +811,9 @@ impl Inner {
     }
 
     fn poll(&self) -> PollResult {
-        //cortex_m::asm::bkpt();
-        //let status = self.usb().intflag.read();
-
         self.usb().intflag.write(|w| {
-            w.wakeup().set_bit()
-            .sof().set_bit()
-            .eorsm().set_bit()
+            w.wakeup().set_bit();
+            w.eorsm().set_bit()
         });
 
         if self.received_suspend_interrupt() {
