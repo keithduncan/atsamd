@@ -86,6 +86,10 @@ where
         self.tc.count_16().intflag.write(|w| w.ovf().set_bit());
     }
 
+    pub fn enable_overflow_event(&mut self) {
+        self.tc.count_16().evctrl.write(|w| w.ovfeo().set_bit());
+    }
+
     pub fn start_(&mut self, params: TimerParams) {
         let divider = params.divider;
         let cycles = params.cycles;
