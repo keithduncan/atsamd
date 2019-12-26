@@ -47,6 +47,46 @@ where
         T: Into<Hertz>,
     {
         let params = TimerParams::new(timeout, self.freq.0);
+        self.start_(params);
+    }
+
+    fn wait(&mut self) -> nb::Result<(), Void> {
+        let count = self.tc.count_16();
+        if count.intflag.read().ovf().bit_is_set() {
+            // Writing a 1 clears the flag
+            count.intflag.modify(|_, w| w.ovf().set_bit());
+            Ok(())
+        } else {
+            Err(nb::Error::WouldBlock)
+        }
+    }
+}
+
+impl<TC> TimerCounter<TC>
+where
+    TC: Count16,
+{
+    /// Enable the interrupt generation for this hardware timer.
+    /// This method only sets the clock configuration to trigger
+    /// the interrupt; it does not configure the interrupt controller
+    /// or define an interrupt handler.
+    pub fn enable_interrupt(&mut self) {
+        self.tc.count_16().intenset.write(|w| w.ovf().set_bit());
+    }
+
+    /// Disables interrupt generation for this hardware timer.
+    /// This method only sets the clock configuration to prevent
+    /// triggering the interrupt; it does not configure the interrupt
+    /// controller.
+    pub fn disable_interrupt(&mut self) {
+        self.tc.count_16().intenclr.write(|w| w.ovf().set_bit());
+    }
+
+    pub fn clear_interrupt(&mut self) {
+        self.tc.count_16().intflag.write(|w| w.ovf().set_bit());
+    }
+
+    pub fn start_(&mut self, params: TimerParams) {
         let divider = params.divider;
         let cycles = params.cycles;
 
@@ -91,42 +131,6 @@ where
             w.wavegen().mfrq();
             w.enable().set_bit()
         });
-    }
-
-    fn wait(&mut self) -> nb::Result<(), Void> {
-        let count = self.tc.count_16();
-        if count.intflag.read().ovf().bit_is_set() {
-            // Writing a 1 clears the flag
-            count.intflag.modify(|_, w| w.ovf().set_bit());
-            Ok(())
-        } else {
-            Err(nb::Error::WouldBlock)
-        }
-    }
-}
-
-impl<TC> TimerCounter<TC>
-where
-    TC: Count16,
-{
-    /// Enable the interrupt generation for this hardware timer.
-    /// This method only sets the clock configuration to trigger
-    /// the interrupt; it does not configure the interrupt controller
-    /// or define an interrupt handler.
-    pub fn enable_interrupt(&mut self) {
-        self.tc.count_16().intenset.write(|w| w.ovf().set_bit());
-    }
-
-    /// Disables interrupt generation for this hardware timer.
-    /// This method only sets the clock configuration to prevent
-    /// triggering the interrupt; it does not configure the interrupt
-    /// controller.
-    pub fn disable_interrupt(&mut self) {
-        self.tc.count_16().intenclr.write(|w| w.ovf().set_bit());
-    }
-
-    pub fn clear_interrupt(&mut self) {
-        self.tc.count_16().intflag.write(|w| w.ovf().set_bit());
     }
 }
 
