@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use super::{Descriptors, DmPad, DpPad};
 use crate::calibration::{usb_transn_cal, usb_transp_cal, usb_trim_cal};
 use crate::clock;
@@ -695,7 +697,7 @@ impl Inner {
         let epint = self.epintflag(ep).read();
         let intflag = self.usb().intflag.read();
 
-        let mut desc = self.desc.borrow_mut();
+        let desc = self.desc.borrow_mut();
 
         dbgprint!("ep{} status {}:\n    bk1rdy={} stallrq1={} stall1={} trcpt1={} trfail1={} byte_count1={} multi_packet_size1={}\n    bk0rdy={} stallrq0={} stall0={} trcpt0={} trfail0={} byte_count0={} multi_packet_size0={}\n    curbk={} dtglin={} dtglout={} rxstp={}   lpmsusp={} lpmnyet={} ramacer={} uprsm={} eorsm={} wakeup={} eorst={} sof={} suspend={}",
                 ep, label,

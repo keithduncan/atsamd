@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use bitfield::bitfield;
 use core::fmt::{Debug, Error as FmtError, Formatter};
 use core::mem;
