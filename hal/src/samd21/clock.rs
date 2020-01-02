@@ -315,6 +315,7 @@ clock_generator!(
     (rtc, RtcClock, RTC),
     (eic, EicClock, EIC),
     (adc, AdcClock, ADC),
+    (evch0, Evch0Clock, EVSYS_0),
 );
 
 /// The frequency of the 48Mhz source.
