@@ -316,6 +316,17 @@ clock_generator!(
     (eic, EicClock, EIC),
     (adc, AdcClock, ADC),
     (evch0, Evch0Clock, EVSYS_0),
+    (evch1, Evch1Clock, EVSYS_1),
+    (evch2, Evch2Clock, EVSYS_2),
+    (evch3, Evch3Clock, EVSYS_3),
+    (evch4, Evch4Clock, EVSYS_4),
+    (evch5, Evch5Clock, EVSYS_5),
+    (evch6, Evch6Clock, EVSYS_6),
+    (evch7, Evch7Clock, EVSYS_7),
+    (evch8, Evch8Clock, EVSYS_8),
+    (evch9, Evch9Clock, EVSYS_9),
+    (evch10, Evch10Clock, EVSYS_10),
+    (evch11, Evch11Clock, EVSYS_11),
 );
 
 /// The frequency of the 48Mhz source.
