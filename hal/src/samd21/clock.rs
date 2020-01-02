@@ -4,7 +4,7 @@
 //! The other types in this module are used to enforce at compile time
 //! that the peripherals have been correctly configured.
 use crate::target_device::gclk::clkctrl::GEN_A::*;
-use crate::target_device::gclk::clkctrl::ID_A::*;
+use crate::target_device::gclk::clkctrl::ID_A::{self, *};
 use crate::target_device::gclk::genctrl::SRC_A::*;
 use crate::target_device::{self, GCLK, NVMCTRL, PM, SYSCTRL};
 use crate::time::{Hertz, U32Ext};
@@ -171,7 +171,7 @@ impl GenericClockController {
                 Hertz(0),
                 Hertz(0),
             ],
-            used_clocks: 1u64 << u8::from(DFLL48M),
+            used_clocks: 1u64 << u8::from(ID_A::DFLL48),
         }
     }
 
@@ -285,7 +285,8 @@ impl GenericClockController {
     /// Returns `None` is the specified generic clock has already been
     /// configured.
     pub fn $id(&mut self, generator: &GClock) -> Option<$Type> {
-        let bits : u64 = 1<<u8::from($clock) as u64;
+        let clock: ID_A = $clock;
+        let bits: u64 = 1<<u8::from(clock) as u64;
         if (self.used_clocks & bits) != 0 {
             return None;
         }
