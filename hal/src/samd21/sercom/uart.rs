@@ -18,6 +18,11 @@ pub trait RxpoTxpo {
     fn rxpo_txpo(&self) -> (u8, u8);
 }
 
+pub struct UartInterrupts {
+    pub receive: bool,
+    pub error: bool,
+}
+
 /// Define a UARTX type for the given Sercom.
 ///
 /// Also defines the valid "pad to uart function" mappings for this instance so
@@ -119,7 +124,8 @@ macro_rules! uart {
                     freq: F,
                     sercom: $SERCOM,
                     pm: &mut PM,
-                    padout: T
+                    interrupts: UartInterrupts,
+                    padout: T,
                 ) -> $Type<RX, TX, RTS, CTS> where
                     [<$Type Padout>]<RX, TX, RTS, CTS>: RxpoTxpo {
                     let padout = padout.into();
@@ -188,11 +194,16 @@ macro_rules! uart {
 
                         while sercom.usart().syncbusy.read().ctrlb().bit_is_set() {}
 
-                        sercom.usart().intenset.modify(|_, w| {
-                            w.rxc().set_bit();
-                            w.error().set_bit()
-                            //w.txc().set_bit()
-                            //w.dre().set_bit()
+                        sercom.usart().intenset.write(|w| {
+                            if interrupts.receive {
+                                w.rxc().set_bit();
+                            }
+
+                            if interrupts.error {
+                                w.error().set_bit();
+                            }
+
+                            w
                         });
 
                         sercom.usart().ctrla.modify(|_, w| w.enable().set_bit());
