@@ -63,6 +63,10 @@ const APP: () = {
             9600.hz(),
             device.SERCOM0,
             &mut device.PM,
+            hal::sercom::UartInterrupts {
+                receive: true,
+                error: false,
+            },
             (rx_pin, tx_pin)
         );
 

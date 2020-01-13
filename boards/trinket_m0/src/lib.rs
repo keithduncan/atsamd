@@ -78,6 +78,10 @@ pub fn uart<F: Into<Hertz>>(
         baud.into(),
         sercom0,
         pm,
+        hal::sercom::UartInterrupts {
+            receive: false,
+            error: false,
+        },
         (d3.into_pad(port), d4.into_pad(port)),
     )
 }
@@ -103,7 +107,6 @@ pub fn i2c_master<F: Into<Hertz>>(
         bus_speed.into(),
         sercom2,
         pm,
-        sda.into_pad(port),
-        scl.into_pad(port),
+        (sda.into_pad(port), scl.into_pad(port)),
     )
 }
