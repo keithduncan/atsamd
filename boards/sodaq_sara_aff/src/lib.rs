@@ -118,6 +118,10 @@ pub fn uart<F: Into<Hertz>>(
         baud.into(),
         sercom5,
         pm,
+        hal::sercom::UartInterrupts {
+            receive: false,
+            error: false,
+        },
         (rx.into_pad(port), tx.into_pad(port)),
     )
 }

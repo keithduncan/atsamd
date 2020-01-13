@@ -123,7 +123,6 @@ pub fn i2c_master<F: Into<Hertz>>(
         bus_speed.into(),
         sercom5,
         pm,
-        sda.into_pad(port),
-        scl.into_pad(port),
+        (sda.into_pad(port), scl.into_pad(port)),
     )
 }
