@@ -45,7 +45,7 @@ before_install:
 
 script:
   - "cd $CRATE"
-  - "cargo build ${EXAMPLES:---examples} $FEATURES $BUILDMODE"
+  - "cargo check ${EXAMPLES:---examples} $FEATURES $BUILDMODE"
 
 stages:
   - test
