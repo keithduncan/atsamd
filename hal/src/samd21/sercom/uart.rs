@@ -243,6 +243,12 @@ macro_rules! uart {
                     self.usart().status.read()
                 }
 
+                pub fn clear_bufovf_error(&mut self) {
+                    self.usart().status.modify(|_, w| {
+                        w.bufovf().set_bit()
+                    });
+                }
+
                 pub fn clear_frame_error(&mut self) {
                     self.usart().status.modify(|_, w| {
                         w.ferr().set_bit()
