@@ -1,7 +1,6 @@
 pub mod calibration;
 pub mod clock;
 pub mod sercom;
-pub mod timer;
 
 #[cfg(feature = "unproven")]
 pub mod watchdog;
@@ -12,11 +11,21 @@ pub mod pwm;
 mod serial_number;
 pub use serial_number::*;
 
-#[cfg(feature = "unproven")]
 pub mod adc;
 
 #[cfg(feature = "usb")]
 pub mod usb;
+
+pub mod rtc;
+pub mod events;
+pub mod dmac;
+pub mod eic;
+pub mod nvic;
+
+// Timers
+pub mod timer;
+pub mod event_counter;
+pub mod timeout;
 
 /// ResetCause represents the reason the MCU was reset.
 #[derive(Debug, Clone, Copy)]
