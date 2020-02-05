@@ -171,7 +171,7 @@ impl GenericClockController {
                 Hertz(0),
                 Hertz(0),
             ],
-            used_clocks: 1u64 << u8::from(ID_A::DFLL48),
+            used_clocks: 1u64 << u8::from(ClockId::DFLL48),
         }
     }
 
@@ -285,14 +285,13 @@ impl GenericClockController {
     /// Returns `None` is the specified generic clock has already been
     /// configured.
     pub fn $id(&mut self, generator: &GClock) -> Option<$Type> {
-        let clock: ID_A = $clock;
-        let bits: u64 = 1<<u8::from(clock) as u64;
+        let bits: u64 = 1<<u8::from(ClockId::$clock) as u64;
         if (self.used_clocks & bits) != 0 {
             return None;
         }
         self.used_clocks |= bits;
 
-        self.state.enable_clock_generator($clock, generator.gclk);
+        self.state.enable_clock_generator(ClockId::$clock, generator.gclk);
         let freq = self.gclks[u8::from(generator.gclk) as usize];
         Some($Type{freq})
     }
@@ -442,8 +441,8 @@ fn configure_and_enable_dfll48m(sysctrl: &mut SYSCTRL, use_external_crystal: boo
             // chill cycle disable
             w.ccdis().set_bit();
 
-            // usb correction
-            w.usbcrm().set_bit();
+            // usb correction is not set due to instability issues around
+            // USB bus resets. TODO(twitchyliquid64): Maybe switch to OSC8M?
 
             // bypass coarse lock (have calibration data)
             w.bplckc().set_bit()

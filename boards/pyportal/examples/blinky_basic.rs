@@ -5,8 +5,7 @@
 
 #[allow(unused_imports)]
 use panic_halt;
-
-use edgebadge as hal;
+use pyportal as hal;
 
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
