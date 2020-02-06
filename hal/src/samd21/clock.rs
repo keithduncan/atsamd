@@ -3,9 +3,6 @@
 //! before you can set up most of the peripherals on the atsamd21 device.
 //! The other types in this module are used to enforce at compile time
 //! that the peripherals have been correctly configured.
-use crate::target_device::gclk::clkctrl::GEN_A::*;
-use crate::target_device::gclk::clkctrl::ID_A::{self, *};
-use crate::target_device::gclk::genctrl::SRC_A::*;
 use crate::target_device::{self, GCLK, NVMCTRL, PM, SYSCTRL};
 use crate::time::{Hertz, U32Ext};
 
@@ -136,17 +133,17 @@ impl GenericClockController {
 
         // Enable a 32khz source -> GCLK1
         if use_external_crystal {
-            state.set_gclk_divider_and_source(GCLK1, 1, XOSC32K, false);
+            state.set_gclk_divider_and_source(ClockGenId::GCLK1, 1, ClockSource::XOSC32K, false);
         } else {
-            state.set_gclk_divider_and_source(GCLK1, 1, OSC32K, false);
+            state.set_gclk_divider_and_source(ClockGenId::GCLK1, 1, ClockSource::OSC32K, false);
         }
 
         // Feed 32khz into the DFLL48
-        state.enable_clock_generator(DFLL48, GCLK1);
+        state.enable_clock_generator(ClockId::DFLL48, ClockGenId::GCLK1);
         // Enable the DFLL48
         configure_and_enable_dfll48m(sysctrl, use_external_crystal);
         // Feed DFLL48 into the main clock
-        state.set_gclk_divider_and_source(GCLK0, 1, DFLL48M, true);
+        state.set_gclk_divider_and_source(ClockGenId::GCLK0, 1, ClockSource::DFLL48M, true);
         // We are now running at 48Mhz
 
         // Reset various dividers back to 1
@@ -178,7 +175,7 @@ impl GenericClockController {
     /// Returns a `GClock` for gclk0, the system clock generator at 48Mhz
     pub fn gclk0(&mut self) -> GClock {
         GClock {
-            gclk: GCLK0,
+            gclk: ClockGenId::GCLK0,
             freq: self.gclks[0],
         }
     }
@@ -186,7 +183,7 @@ impl GenericClockController {
     /// Returns a `GClock` for gclk1, the 32Khz oscillator.
     pub fn gclk1(&mut self) -> GClock {
         GClock {
-            gclk: GCLK1,
+            gclk: ClockGenId::GCLK1,
             freq: self.gclks[1],
         }
     }
@@ -229,12 +226,12 @@ impl GenericClockController {
         self.state
             .set_gclk_divider_and_source(gclk, divider, src, improve_duty_cycle);
         let freq: Hertz = match src {
-            XOSC32K | OSC32K | OSCULP32K => OSC32K_FREQ,
-            GCLKGEN1 => self.gclks[1],
-            OSC8M => 8.mhz().into(),
-            DFLL48M => OSC48M_FREQ,
-            DPLL96M => 96.mhz().into(),
-            GCLKIN | XOSC => unimplemented!(),
+            ClockSource::XOSC32K | ClockSource::OSC32K | ClockSource::OSCULP32K => OSC32K_FREQ,
+            ClockSource::GCLKGEN1 => self.gclks[1],
+            ClockSource::OSC8M => 8.mhz().into(),
+            ClockSource::DFLL48M => OSC48M_FREQ,
+            ClockSource::DPLL96M => 96.mhz().into(),
+            ClockSource::GCLKIN | ClockSource::XOSC => unimplemented!(),
         };
         self.gclks[idx] = Hertz(freq.0 / divider as u32);
         Some(GClock { gclk, freq })
