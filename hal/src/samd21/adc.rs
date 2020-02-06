@@ -126,7 +126,7 @@ impl ADC {
     }
 }
 
-type Input = target_device::adc::inputctrl::MUXPOS_A;
+pub type Input = target_device::adc::inputctrl::MUXPOS_A;
 
 pub trait Channel<ADC> {
     /// Channel ID type
