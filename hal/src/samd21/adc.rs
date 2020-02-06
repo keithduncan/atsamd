@@ -142,7 +142,7 @@ pub trait Channel<ADC> {
     const CHANNEL: Self::ID;
 }
 
-struct InternalTemp;
+pub struct InternalTemp;
 
 impl Channel<ADC> for InternalTemp {
     type ID = Input;
