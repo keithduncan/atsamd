@@ -1,11 +1,10 @@
 use crate::{
     target_device,
+    gpio,
     calibration,
 };
 
 use nb::{self, block};
-
-pub type Input = target_device::adc::inputctrl::MUXPOS_A;
 
 pub struct ADC {
     adc: target_device::ADC,
@@ -68,32 +67,32 @@ impl ADC {
             adc,
         };
 
-        new.set_input(Input::TEMP);
-        new.start();
+        new.start(&mut InternalTemp);
         let _result = block!(new.wait());
         new.clear_ready_interrupt();
 
         new
     }
 
-    pub fn set_input(&mut self, input: Input) {
+    pub fn set_input<PIN: Channel<Self, ID = Input>>(&mut self, _input: &mut PIN) {
         while self.adc.status.read().syncbusy().bit_is_set() {
             cortex_m::asm::nop();
         }
         self.adc.inputctrl.modify(|_, w| {
-            w.muxpos().variant(input)
+            w.muxpos().variant(<PIN as Channel<Self>>::CHANNEL)
         });
     }
 
-    // TODO take AIN[x] as an argument?
-    pub fn start(&mut self) {
+    pub fn start<PIN: Channel<Self, ID = Input>>(&mut self, input: &mut PIN) {
+        self.set_input(input);
+
         while self.adc.status.read().syncbusy().bit_is_set() {
             cortex_m::asm::nop();
         }
         self.adc.swtrig.write(|w| w.start().set_bit());
     }
 
-    pub fn wait(&mut self) -> Result<u16, nb::Error<()>> {
+    pub fn wait(&mut self) -> Result<u16, nb::Error<core::convert::Infallible>> {
         if self.adc.intflag.read().resrdy().bit_is_set() {
             Ok(self.result())
         } else {
@@ -125,4 +124,65 @@ impl ADC {
         }
         self.adc.evctrl.modify(|_, w| w.startei().set_bit());
     }
+}
+
+type Input = target_device::adc::inputctrl::MUXPOS_A;
+
+pub trait Channel<ADC> {
+    /// Channel ID type
+    ///
+    /// A type used to identify this ADC channel. For example, if the ADC has eight channels, this
+    /// might be a `u8`. If the ADC has multiple banks of channels, it could be a tuple, like
+    /// `(u8: bank_id, u8: channel_id)`.
+    type ID;
+
+    // `channel` is a function due to [this reported
+    // issue](https://github.com/rust-lang/rust/issues/54973). Something about blanket impls
+    // combined with `type ID; const CHANNEL: Self::ID;` causes problems.
+    const CHANNEL: Self::ID;
+}
+
+struct InternalTemp;
+
+impl Channel<ADC> for InternalTemp {
+    type ID = Input;
+    const CHANNEL: Self::ID = Input::TEMP;
+}
+
+macro_rules! adc_pins {
+    ($($pin:ident: $chan:expr,)+) => {
+        $(
+            impl Channel<ADC> for gpio::$pin<gpio::PfB> {
+                type ID = Input;
+                const CHANNEL: Self::ID = $chan;
+            }
+        )+
+    }
+}
+
+adc_pins! {
+    Pa2: Input::PIN0,
+    Pa3: Input::PIN1,
+    Pa4: Input::PIN4,
+    Pa5: Input::PIN5,
+    Pa6: Input::PIN6,
+    Pa7: Input::PIN7,
+    Pa8: Input::PIN16,
+    Pa9: Input::PIN17,
+    Pa10: Input::PIN18,
+    Pa11: Input::PIN19,
+}
+
+#[cfg(any(feature = "samd21g18a", feature = "samd21j18a"))]
+adc_pins! {
+    Pb0: Input::PIN8,
+    Pb1: Input::PIN9,
+    Pb2: Input::PIN10,
+    Pb3: Input::PIN11,
+    Pb4: Input::PIN12,
+    Pb5: Input::PIN13,
+    Pb6: Input::PIN14,
+    Pb7: Input::PIN15,
+    Pb8: Input::PIN2,
+    Pb9: Input::PIN3,
 }
