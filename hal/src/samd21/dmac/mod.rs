@@ -1,8 +1,9 @@
 use crate::target_device;
 
-pub struct DMAC {
-	dmac: target_device::DMAC,
-}
+use core::ops::{
+	Deref,
+	DerefMut,
+};
 
 pub mod descriptor;
 pub use descriptor::Descriptor;
@@ -12,6 +13,24 @@ pub use channel::Channel;
 
 pub static mut BASE_DESCRIPTORS: [Descriptor; 12] = [descriptor::default(); 12];
 pub static mut WRITEBACK_DESCRIPTORS: [Descriptor; 12] = [descriptor::default(); 12];
+
+pub struct DMAC {
+	pub dmac: target_device::DMAC,
+}
+
+impl Deref for DMAC {
+	type Target = target_device::DMAC;
+
+	fn deref(&self) -> &Self::Target {
+		&self.dmac
+	}
+}
+
+impl DerefMut for DMAC {
+	fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
+		&mut self.dmac
+	}
+}
 
 impl DMAC {
 	pub fn init(pm: &mut target_device::PM, dmac: target_device::DMAC) -> Self {
