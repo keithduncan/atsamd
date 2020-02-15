@@ -16,18 +16,11 @@ use generic_array::{
 pub mod serial;
 pub use serial::Serial;
 
-pub struct Buffer<N, X>
-where
-    N: NonZero + Unsigned,
-    X: NonZero + Unsigned,
-    N: Sub<U1> + Mul<X>,
-    <N as Sub<U1>>::Output: ArrayLength<dmac::Descriptor>,
-    <N as Mul<X>>::Output: ArrayLength<u8>,
-{
+pub struct ConstBuffer<A, B> {
     // Descriptors, one fewer than given due to dmac::BASE_DESCRIPTORS
-    descriptors: MaybeUninit<GenericArray<dmac::Descriptor, <N as Sub<U1>>::Output>>,
+    descriptors: MaybeUninit<A>,
     // Backing Store, X bytes per descriptor
-    data: MaybeUninit<GenericArray<u8, <N as Mul<X>>::Output>>,
+    data: MaybeUninit<B>,
 
     // Configured marker
     configured: Option<()>,
@@ -41,16 +34,9 @@ where
     read: usize,
 }
 
-impl<N, X> Buffer<N, X>
-where
-    N: NonZero + Unsigned,
-    X: NonZero + Unsigned,
-    N: Sub<U1> + Mul<X>,
-    <N as Sub<U1>>::Output: ArrayLength<dmac::Descriptor>,
-    <N as Mul<X>>::Output: ArrayLength<u8>,
-{
-    pub fn new() -> Self {
-        Buffer {
+impl<A, B> ConstBuffer<A, B> {
+    pub const fn new() -> Self {
+        Self {
             descriptors: MaybeUninit::uninit(),
             data: MaybeUninit::uninit(),
 
@@ -60,6 +46,27 @@ where
             write: 0,
             read: 0,
         }
+    }
+}
+
+pub struct Buffer<N, X>(pub ConstBuffer<GenericArray<dmac::Descriptor, <N as Sub<U1>>::Output>, GenericArray<u8, <N as Mul<X>>::Output>>)
+where
+    N: NonZero + Unsigned,
+    X: NonZero + Unsigned,
+    N: Sub<U1> + Mul<X>,
+    <N as Sub<U1>>::Output: ArrayLength<dmac::Descriptor>,
+    <N as Mul<X>>::Output: ArrayLength<u8>;
+
+impl<N, X> Buffer<N, X>
+where
+    N: NonZero + Unsigned,
+    X: NonZero + Unsigned,
+    N: Sub<U1> + Mul<X>,
+    <N as Sub<U1>>::Output: ArrayLength<dmac::Descriptor>,
+    <N as Mul<X>>::Output: ArrayLength<u8>,
+{
+    pub fn new() -> Self {
+        Buffer(ConstBuffer::new())
     }
 
     /// Initialise the descriptors for this static buffer
@@ -74,13 +81,13 @@ where
     where
         F: FnMut(*mut u8, u16, *const dmac::Descriptor) -> dmac::Descriptor,
     {
-        self.configured.take().expect("only configured once");
+        self.0.configured.take().expect("only configured once");
 
         let descriptors_ptr: *mut dmac::Descriptor =
-            self.descriptors.as_mut_ptr() as *mut dmac::Descriptor;
+            self.0.descriptors.as_mut_ptr() as *mut dmac::Descriptor;
         let descriptors_len = <N as Sub<U1>>::Output::to_usize();
 
-        let data_ptr: *mut u8 = self.data.as_mut_ptr() as *mut u8;
+        let data_ptr: *mut u8 = self.0.data.as_mut_ptr() as *mut u8;
         let _data_len = <N as Mul<X>>::Output::to_usize();
 
         unsafe {
@@ -150,7 +157,7 @@ where
     ///       may notify partial more than once.
     pub fn notify_descriptor_partial(&self, remaining: u16) {
         unsafe {
-            let buf = self.buf.as_ptr();
+            let buf: *mut ConstBuffer<_, _> = &mut (*self.buf.as_ptr()).0 as *mut _;
 
             let written = ptr::read_volatile(&(*buf).write);
             let already_written =
@@ -168,7 +175,7 @@ where
     /// Advance the buffer the entire inprogress block is complete
     pub fn notify_descriptor(&self) {
         unsafe {
-            let buf = self.buf.as_ptr();
+            let buf: *mut ConstBuffer<_, _> = &mut (*self.buf.as_ptr()).0 as *mut _;
 
             // These will always be aligned to the X byte blocks
             let write_block_start = ptr::read_volatile(&(*buf).write_block);
@@ -213,7 +220,7 @@ where
 {
     pub fn read(&self) -> GrantR<N, X> {
         let slice = unsafe {
-            let buf = self.buf.as_ptr();
+            let buf: *mut ConstBuffer<_, _> = &mut (*self.buf.as_ptr()).0 as *mut _;
 
             let data_ptr: *mut u8 = (*buf).data.as_mut_ptr() as *mut u8;
             let data_len = <N as Mul<X>>::Output::to_usize();
@@ -264,7 +271,7 @@ where
     /// Inform the buffer the given number of bytes are now free to be reused
     pub fn release(self, used: usize) {
         unsafe {
-            let buf = self.buf.as_ptr();
+            let buf: *mut ConstBuffer<_, _> = &mut (*self.buf.as_ptr()).0 as *mut _;
 
             let most = core::cmp::min(used, self.slice.len());
             let data_len = <N as Mul<X>>::Output::to_usize();
