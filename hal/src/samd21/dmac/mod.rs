@@ -11,6 +11,8 @@ pub use descriptor::Descriptor;
 pub mod channel;
 pub use channel::Channel;
 
+pub mod buffer;
+
 pub static mut BASE_DESCRIPTORS: [Descriptor; 12] = [descriptor::default(); 12];
 pub static mut WRITEBACK_DESCRIPTORS: [Descriptor; 12] = [descriptor::default(); 12];
 
