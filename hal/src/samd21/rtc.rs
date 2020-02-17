@@ -26,47 +26,51 @@ impl RTC {
 		let mode = rtc.mode0_mut();
 
 		// Disable and reset rtc
-		while mode.status.read().syncbusy().bit_is_set() {
-			cortex_m::asm::nop();
-		}
 		mode.ctrl.modify(|_, w| {
 			w.enable().clear_bit()
 		});
 		while mode.status.read().syncbusy().bit_is_set() {
 			cortex_m::asm::nop();
 		}
+
 		mode.ctrl.modify(|_, w| {
 			w.swrst().set_bit()
 		});
-
-		// Configure prescaler
 		while mode.status.read().syncbusy().bit_is_set() {
 			cortex_m::asm::nop();
 		}
+
+		// Configure prescaler
 		mode.ctrl.write(|w| {
 			w.matchclr().set_bit();
 			w.mode().count32();
 			w.prescaler().div1024()
 		});
-
 		while mode.status.read().syncbusy().bit_is_set() {
 			cortex_m::asm::nop();
 		}
+
 		mode.comp[0].write(|w| unsafe {
 			w.bits(count)
 		});
+		while mode.status.read().syncbusy().bit_is_set() {
+			cortex_m::asm::nop();
+		}
 
 		mode.intenset.modify(|_, w| {
 			w.cmp0().set_bit()
 		});
-
-		// Enable
 		while mode.status.read().syncbusy().bit_is_set() {
 			cortex_m::asm::nop();
 		}
+
+		// Enable
 		mode.ctrl.modify(|_, w| {
 			w.enable().set_bit()
 		});
+		while mode.status.read().syncbusy().bit_is_set() {
+			cortex_m::asm::nop();
+		}
 
 		RTC {
 			rtc: rtc,
